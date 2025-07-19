@@ -1,0 +1,25 @@
+# General
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.sqlite3
+.env
+.env.*
+
+# Dev tools
+.vscode/
+.idea/
+*.code-workspace
+docker-language-server/
+
+# Git
+.git/
+.gitignore
+
+# Misc
+tests/
+*.md
+Dockerfile
+.dockerignore
