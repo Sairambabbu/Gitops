@@ -1,0 +1,41 @@
+{{- if and .Values.server.ingress.enabled (eq .Values.server.ingress.controller "generic") }}
+{{- $insecure := index .Values.configs.params "server.insecure" | toString -}}
+{{- $servicePort := eq $insecure "true" | ternary .Values.server.service.servicePortHttp .Values.server.service.servicePortHttps -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "argo-cd.server.fullname" . }}
+  namespace: {{ include "argo-cd.namespace" . }}
+  labels:
+    {{- include "argo-cd.labels" (dict "context" . "component" .Values.server.name "name" .Values.server.name) | nindent 4 }}
+    {{- with .Values.server.ingress.labels }}
+      {{- tpl (toYaml .) $ | nindent 4 }}
+    {{- end }}
+  {{- with .Values.server.ingress.annotations }}
+  annotations:
+    {{- range $key, $value := . }}
+    {{ $key }}: {{ tpl (toString $value) $ | quote }}
+    {{- end }}
+  {{- end }}
+spec:
+  {{- with .Values.server.ingress.ingressClassName }}
+  ingressClassName: {{ tpl . $ }}
+  {{- end }}
+  rules:
+    - http:
+        paths:
+          {{- with .Values.server.ingress.extraPaths }}
+            {{- tpl (toYaml .) $ | nindent 10 }}
+          {{- end }}
+          - path: {{ .Values.server.ingress.path }}
+            pathType: {{ .Values.server.ingress.pathType }}
+            backend:
+              service:
+                name: {{ include "argo-cd.server.fullname" . }}
+                port:
+                  number: {{ $servicePort }}
+  {{- with .Values.server.ingress.tls }}
+  tls:
+    {{- tpl (toYaml .) $ | nindent 4 }}
+  {{- end }}
+{{- end }}
