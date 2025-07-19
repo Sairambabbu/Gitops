@@ -1,0 +1,23 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Values.ingress.name }}                     # Comes from values.yaml -> ingress.name
+  namespace: {{ .Release.Namespace }}                  # Uses Helm release namespace (e.g., backend)
+  annotations:                                         # Ingress annotations (ALB config)
+    {{- range $key, $value := .Values.ingress.annotations }}
+    {{ $key }}: {{ $value | quote }}                   # Quotes values and loops over annotations map
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}    # e.g., alb
+  rules:
+    - http:
+        paths:
+          - path: {{ .Values.ingress.path }}           # e.g., /
+            pathType: {{ .Values.ingress.pathType }}   # e.g., Prefix
+            backend:
+              service:
+                name: {{ .Values.service.name }}       # Target service name -> service.name
+                port:
+                  number: {{ .Values.service.port }}   # Target port -> service.port
+{{- end }}

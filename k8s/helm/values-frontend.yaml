@@ -1,0 +1,48 @@
+deployment:
+  replicaCount: 2
+  name: frontend
+  labels: frontend
+
+configMap:
+  enabled: true
+  name: frontend-config
+  NEXT_PUBLIC_API_BASE_URL: "k8s-creationsingress-c8ced610a3-1305035900.us-east-1.elb.amazonaws.com"
+
+secret:
+  enabled: false
+  name: backend-secret
+  data:
+    DB_USER: appuser
+    DB_PASSWORD: appuser
+
+image:
+  repository: 375609200788.dkr.ecr.us-east-1.amazonaws.com/creations-prod-frontend
+  tag: v2
+  pullPolicy: IfNotPresent
+
+containerPort: 3000
+containerName: frontend
+
+service:
+  name: frontend-service
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  name: frontend-ingress
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/frontend-protocol: HTTP
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    alb.ingress.kubernetes.io/group.name: frontend-ingress
+  path: /
+  pathType: Prefix
+  host: ""  # No host used
+
+envFrom:
+  configMapRef: frontend-config
+
+resources: {}

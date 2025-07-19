@@ -1,0 +1,51 @@
+deployment:
+  replicaCount: 2
+  name: backend
+  labels: backend
+
+configMap:
+  enabled: true
+  name: backend-config
+  DB_HOST: "creations-prod-pg.c0122y4uo9zr.us-east-1.rds.amazonaws.com"
+  DB_NAME: "creations-prod-pg"
+
+image:
+  repository: 375609200788.dkr.ecr.us-east-1.amazonaws.com/creations-prod-backend
+  tag: v2
+  pullPolicy: IfNotPresent
+
+containerPort: 80
+containerName: backend
+
+service:
+  name: backend-service
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  name: backend-ingress
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/backend-protocol: HTTP
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    alb.ingress.kubernetes.io/group.name: creations-ingress
+  path: /
+  pathType: Prefix
+  host: ""  # No host used
+
+envFrom:
+  configMapRef: backend-config
+  secretRef: backend-secret
+
+resources: {}
+
+secret:
+  enabled: true
+  name: backend-secret
+  data:
+    DB_USER: appuser
+    DB_PASSWORD: appuser
+
